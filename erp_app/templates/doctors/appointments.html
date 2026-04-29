@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}My Appointments{% endblock %}
+{% block page_title %}Appointments{% endblock %}
+{% block sidebar_links %}
+<div class="sidebar-section">Doctor Portal</div>
+<a href="{% url 'doctor_dashboard' %}" class="sidebar-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="{% url 'doctor_appointments' %}" class="sidebar-link active"><i class="fas fa-calendar-alt"></i> Appointments</a>
+<a href="{% url 'doctor_patients' %}" class="sidebar-link"><i class="fas fa-users"></i> My Patients</a>
+<a href="{% url 'doctor_prescriptions' %}" class="sidebar-link"><i class="fas fa-prescription-bottle-alt"></i> Prescriptions</a>
+<a href="{% url 'doctor_reports' %}" class="sidebar-link"><i class="fas fa-flask"></i> Lab Reports</a>
+<a href="{% url 'assign_lab_test' %}" class="sidebar-link"><i class="fas fa-vials"></i> Assign Test</a>
+<div class="sidebar-section">AI Tools</div>
+<a href="{% url 'ai_prediction' %}" class="sidebar-link"><i class="fas fa-brain"></i> AI Predictor</a>
+<a href="{% url 'ai_risk_dashboard' %}" class="sidebar-link"><i class="fas fa-exclamation-triangle"></i> Risk Dashboard</a>
+{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>📅 My Appointments</h1><p>Manage and update your patient appointments</p></div></div>
+<div class="card mb-3 p-3">
+  <form method="get" class="d-flex gap-2 flex-wrap align-items-end">
+    <div><label class="form-label" style="font-size:11px;">STATUS</label>
+      <select name="status" class="form-select" style="width:140px;">
+        <option value="">All Statuses</option>
+        <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+        <option value="Approved" {% if status_filter == 'Approved' %}selected{% endif %}>Approved</option>
+        <option value="Completed" {% if status_filter == 'Completed' %}selected{% endif %}>Completed</option>
+        <option value="Cancelled" {% if status_filter == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+      </select></div>
+    <div><label class="form-label" style="font-size:11px;">DATE</label><input name="date" type="date" class="form-control" style="width:160px;" value="{{ date_filter }}"></div>
+    <button class="btn-primary-custom" style="height:38px;"><i class="fas fa-filter"></i> Filter</button>
+    <a href="{% url 'doctor_appointments' %}" class="btn-secondary-custom" style="height:38px;">Reset</a>
+  </form>
+</div>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-custom w-100">
+      <thead><tr><th>Patient</th><th>Date & Time</th><th>Type</th><th>Priority</th><th>Status</th><th>Symptoms</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for a in appointments %}
+        <tr>
+          <td><div style="font-weight:600;">{{ a.patient.name }}</div><div style="font-size:11px;color:#94a3b8;">{{ a.patient.age }}y · {{ a.patient.blood_group|default:"—" }}</div></td>
+          <td><div style="font-weight:600;font-size:13px;">{{ a.date }}</div><div style="font-size:11px;color:#94a3b8;">{{ a.time|default:"—" }}</div></td>
+          <td><span style="font-size:11px;background:#f0f9ff;color:#0369a1;padding:2px 9px;border-radius:10px;">{{ a.appointment_type }}</span></td>
+          <td><span class="badge-status {% if a.priority == 'Emergency' %}badge-emergency{% elif a.priority == 'High' %}badge-high{% elif a.priority == 'Low' %}badge-low{% else %}badge-normal{% endif %}">{{ a.priority }}</span></td>
+          <td><span class="badge-status badge-{{ a.status|lower }}">{{ a.status }}</span></td>
+          <td style="font-size:12px;color:#64748b;max-width:160px;">{{ a.symptoms|truncatechars:50|default:"—" }}</td>
+          <td>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <a href="{% url 'patient_profile' a.patient.id %}" class="btn btn-sm btn-outline-primary" style="font-size:10px;border-radius:5px;">Profile</a>
+              {% if a.status == 'Pending' %}<a href="{% url 'update_appointment_status' a.id 'Approved' %}" class="btn btn-sm btn-outline-success" style="font-size:10px;border-radius:5px;">Approve</a>{% endif %}
+              {% if a.status == 'Approved' %}<a href="{% url 'add_prescription' a.patient.id %}" class="btn btn-sm btn-outline-info" style="font-size:10px;border-radius:5px;">Prescribe</a>{% endif %}
+              {% if a.status != 'Cancelled' and a.status != 'Completed' %}<a href="{% url 'update_appointment_status' a.id 'Cancelled' %}" class="btn btn-sm btn-outline-danger" style="font-size:10px;border-radius:5px;" onclick="return confirm('Cancel?')">Cancel</a>{% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-center text-muted p-4">No appointments found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

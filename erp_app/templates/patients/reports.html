@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}My Lab Reports{% endblock %}
+{% block page_title %}Lab Reports{% endblock %}
+{% block sidebar_links %}<div class="sidebar-section">Patient Portal</div>
+<a href="{% url 'patient_dashboard' %}" class="sidebar-link"><i class="fas fa-home"></i> Dashboard</a>
+<a href="{% url 'patient_book_appointment' %}" class="sidebar-link"><i class="fas fa-calendar-plus"></i> Book Appointment</a>
+<a href="{% url 'patient_appointments' %}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> My Appointments</a>
+<a href="{% url 'patient_prescriptions' %}" class="sidebar-link"><i class="fas fa-prescription-bottle-alt"></i> Prescriptions</a>
+<a href="{% url 'patient_reports' %}" class="sidebar-link"><i class="fas fa-flask"></i> Lab Reports</a>
+<a href="{% url 'patient_billing' %}" class="sidebar-link"><i class="fas fa-file-invoice-dollar"></i> Billing</a>
+<a href="{% url 'ai_prediction' %}" class="sidebar-link"><i class="fas fa-brain"></i> AI Check-up</a>
+<a href="{% url 'patient_notifications' %}" class="sidebar-link"><i class="fas fa-bell"></i> Notifications</a>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🧪 My Lab Reports</h1></div></div>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-custom w-100">
+      <thead><tr><th>Test</th><th>Result</th><th>Normal Range</th><th>Flag</th><th>Status</th><th>Date</th><th>Report</th></tr></thead>
+      <tbody>
+        {% for r in reports%}
+        <tr>
+          <td style="font-weight:600;">{{ r.test_name }}</td>
+          <td style="font-size:13px;color:#475569;">{{ r.result|truncatechars:60|default:"Awaiting result" }}</td>
+          <td style="font-size:12px;color:#94a3b8;">{{ r.normal_range|default:"—" }}</td>
+          <td><span class="badge-status {% if r.abnormal_flag == 'Critical' %}badge-critical{% elif r.abnormal_flag == 'Abnormal' %}badge-pending{% else %}badge-approved{% endif %}">{{ r.abnormal_flag }}</span></td>
+          <td><span class="badge-status {% if r.status == 'Completed' %}badge-approved{% elif r.status == 'In Progress' %}badge-pending{% else %}badge-low{% endif %}">{{ r.status }}</span></td>
+          <td style="font-size:12px;color:#94a3b8;">{{ r.date|date:"d M Y" }}</td>
+          <td>{% if r.report_file%}<a href="{{r.report_file.url}}" target="_blank" class="btn btn-sm btn-outline-primary" style="font-size:10px;border-radius:5px;"><i class="fas fa-download"></i></a>{% else %}<span style="color:#94a3b8;font-size:11px;">—</span>{% endif %}</td>
+        </tr>
+        {%empty%}<tr><td colspan="7" class="text-center text-muted p-4">No lab reports yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

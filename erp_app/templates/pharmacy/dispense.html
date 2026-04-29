@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Dispense Medicine{% endblock %}
+{% block page_title %}Dispense Medicine{% endblock %}
+{% block sidebar_links %}
+<div class="sidebar-section">Pharmacy</div>
+<a href="{% url 'pharmacy_dashboard' %}" class="sidebar-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="{% url 'pharmacy_inventory' %}" class="sidebar-link"><i class="fas fa-boxes"></i> Inventory</a>
+<a href="{% url 'dispense_medicine' %}" class="sidebar-link active"><i class="fas fa-hand-holding-medical"></i> Dispense</a>
+{% endblock %}
+{% block content %}
+<div style="max-width:680px;margin:0 auto;">
+  <div class="page-header"><div><h1>💊 Dispense Medicine</h1><p>Issue medicine to patient from inventory</p></div></div>
+  <div class="card p-4">
+    <form method="post">{% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-6"><label class="form-label">Patient *</label>
+          <select name="patient" class="form-select" required>
+            <option value="">— Select Patient —</option>
+            {% for p in patients %}<option value="{{ p.id }}">{{ p.name }} ({{ p.phone }})</option>{% endfor %}
+          </select></div>
+        <div class="col-md-6"><label class="form-label">Prescription (optional)</label>
+          <select name="prescription" class="form-select">
+            <option value="">— Link Prescription —</option>
+            {% for rx in prescriptions %}<option value="{{ rx.id }}">Rx#{{ rx.id }} — {{ rx.patient.name }}</option>{% endfor %}
+          </select></div>
+        <div class="col-md-6"><label class="form-label">Medicine *</label>
+          <select name="medicine" class="form-select" required onchange="updatePrice(this)">
+            <option value="">— Select Medicine —</option>
+            {% for m in medicines %}<option value="{{ m.id }}" data-price="{{ m.price_per_unit }}" data-stock="{{ m.stock_quantity }}">{{ m.name }} ({{ m.stock_quantity }} {{ m.unit }}s avail.)</option>{% endfor %}
+          </select></div>
+        <div class="col-md-3"><label class="form-label">Quantity *</label><input name="quantity" id="qty" type="number" class="form-control" required min="1" value="1" oninput="calcTotal()"></div>
+        <div class="col-md-3"><label class="form-label">Est. Cost</label><input id="totalCost" class="form-control" readonly style="background:#f8fafc;font-weight:700;color:#0ea5e9;" value="₹0.00"></div>
+        <div class="col-12 d-flex gap-2 mt-2">
+          <button type="submit" class="btn-primary-custom"><i class="fas fa-hand-holding-medical"></i> Dispense</button>
+          <a href="{% url 'pharmacy_dashboard' %}" class="btn-secondary-custom">Cancel</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+let pricePerUnit = 0;
+function updatePrice(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  pricePerUnit = parseFloat(opt.dataset.price) || 0;
+  calcTotal();
+}
+function calcTotal() {
+  const qty = parseInt(document.getElementById('qty').value) || 1;
+  document.getElementById('totalCost').value = '₹' + (pricePerUnit * qty).toFixed(2);
+}
+</script>
+{% endblock %}

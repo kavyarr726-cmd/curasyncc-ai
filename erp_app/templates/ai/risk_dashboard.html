@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block title %}AI Risk Dashboard{% endblock %}
+{% block page_title %}AI Risk Dashboard{% endblock %}
+{% block sidebar_links %}
+<div class="sidebar-section">Doctor</div>
+<a href="{% url 'doctor_dashboard' %}" class="sidebar-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="{% url 'doctor_appointments' %}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> Appointments</a>
+<a href="{% url 'ai_prediction' %}" class="sidebar-link"><i class="fas fa-brain"></i> AI Prediction</a>
+<a href="{% url 'ai_risk_dashboard' %}" class="sidebar-link active"><i class="fas fa-exclamation-triangle"></i> Risk Dashboard</a>
+{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🤖 AI Patient Risk Dashboard</h1><p>ML-based risk stratification across all patients</p></div></div>
+<div class="row g-3 mb-4">
+  {% set dist = risk_distribution %}
+  <div class="col-md-3"><div class="stat-card green"><div class="stat-icon"><i class="fas fa-check-circle" style="color:#10b981"></i></div><div class="stat-label">Low Risk</div><div class="stat-value" id="rLow">—</div></div></div>
+  <div class="col-md-3"><div class="stat-card orange"><div class="stat-icon"><i class="fas fa-exclamation" style="color:#f59e0b"></i></div><div class="stat-label">Medium Risk</div><div class="stat-value" id="rMed">—</div></div></div>
+  <div class="col-md-3"><div class="stat-card red"><div class="stat-icon"><i class="fas fa-exclamation-triangle" style="color:#ef4444"></i></div><div class="stat-label">High Risk</div><div class="stat-value" id="rHigh">—</div></div></div>
+  <div class="col-md-3"><div class="stat-card red"><div class="stat-icon"><i class="fas fa-skull-crossbones" style="color:#7f1d1d"></i></div><div class="stat-label">Critical</div><div class="stat-value" id="rCrit">—</div></div></div>
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-header-custom"><i class="fas fa-chart-pie" style="color:#6366f1"></i> Risk Distribution</div>
+      <div class="p-3"><div class="chart-wrapper"><canvas id="riskChart"></canvas></div></div>
+    </div>
+  </div>
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header-custom"><i class="fas fa-exclamation-triangle text-danger"></i> High Risk Patients</div>
+      <div class="table-responsive" style="max-height:280px;overflow-y:auto;">
+        <table class="table-custom w-100">
+          <thead><tr><th>Patient</th><th>Age</th><th>Conditions</th><th>Risk Score</th><th>Label</th></tr></thead>
+          <tbody>
+            {% for p in high_risk_patients %}
+            <tr>
+              <td><div style="font-weight:600;">{{ p.name }}</div></td>
+              <td>{{ p.age }}</td>
+              <td style="font-size:12px;color:#64748b;">{{ p.chronic_conditions|default:"—"|truncatechars:30 }}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <div style="width:60px;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden;"><div style="height:100%;width:{{ p.risk_score }}%;background:{% if p.risk_score >= 70 %}#ef4444{% elif p.risk_score >= 50 %}#f97316{% elif p.risk_score >= 25 %}#f59e0b{% else %}#10b981{% endif %};border-radius:3px;"></div></div>
+                  <span style="font-size:12px;font-weight:700;">{{ p.risk_score|floatformat:0 }}</span>
+                </div>
+              </td>
+              <td><span class="badge-status {% if p.risk_label == 'Critical' %}badge-critical{% elif p.risk_label == 'High' %}badge-high{% else %}badge-pending{% endif %}">{{ p.risk_label }}</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center text-muted p-3">No high-risk patients.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header-custom"><i class="fas fa-flask text-danger"></i> Critical Lab Reports</div>
+      <div style="max-height:280px;overflow-y:auto;">
+        {% for r in critical_labs %}
+        <div style="padding:12px 16px;border-bottom:1px solid #f1f5f9;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div><div style="font-weight:600;font-size:13px;">{{ r.patient.name }}</div><div style="font-size:12px;color:#64748b;">{{ r.test_name }}</div></div>
+            <span class="badge-status badge-critical">Critical</span>
+          </div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:4px;">{{ r.date|date:"d M Y H:i" }}</div>
+        </div>
+        {% empty %}
+        <div class="p-4 text-center text-muted">No critical reports.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header-custom"><i class="fas fa-robot" style="color:#6366f1;"></i> Recent AI Predictions</div>
+      <div style="max-height:280px;overflow-y:auto;">
+        {% for log in ai_logs %}
+        <div style="padding:12px 16px;border-bottom:1px solid #f1f5f9;">
+          <div style="display:flex;justify-content:space-between;">
+            <div><div style="font-weight:600;font-size:13px;">{{ log.predicted_disease }}</div><div style="font-size:11px;color:#94a3b8;">{{ log.patient.name|default:"Anonymous" }}</div></div>
+            <div style="text-align:right;">
+              <div style="font-weight:700;font-size:14px;color:#6366f1;">{{ log.confidence }}%</div>
+              <div style="font-size:10px;color:#94a3b8;">confidence</div>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="p-4 text-center text-muted">No predictions yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const rd = {{ risk_distribution|safe }};
+document.getElementById('rLow').textContent = rd.Low;
+document.getElementById('rMed').textContent = rd.Medium;
+document.getElementById('rHigh').textContent = rd.High;
+document.getElementById('rCrit').textContent = rd.Critical;
+new Chart(document.getElementById('riskChart'), {
+  type:'doughnut',
+  data:{labels:['Low','Medium','High','Critical'],datasets:[{data:[rd.Low,rd.Medium,rd.High,rd.Critical],backgroundColor:['#10b981','#f59e0b','#f97316','#ef4444'],borderWidth:0}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:10}}}}
+});
+</script>
+{% endblock %}

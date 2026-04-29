@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Lab Reports{% endblock %}
+{% block page_title %}Lab Reports{% endblock %}
+{% block sidebar_links %}<div class="sidebar-section">Doctor Portal</div>
+<a href="{% url 'doctor_dashboard' %}" class="sidebar-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="{% url 'doctor_appointments' %}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> Appointments</a>
+<a href="{% url 'doctor_patients' %}" class="sidebar-link"><i class="fas fa-users"></i> My Patients</a>
+<a href="{% url 'doctor_prescriptions' %}" class="sidebar-link"><i class="fas fa-prescription-bottle-alt"></i> Prescriptions</a>
+<a href="{% url 'doctor_reports' %}" class="sidebar-link"><i class="fas fa-flask"></i> Lab Reports</a>
+<a href="{% url 'assign_lab_test' %}" class="sidebar-link"><i class="fas fa-vials"></i> Assign Test</a>
+<div class="sidebar-section">AI Tools</div>
+<a href="{% url 'ai_prediction' %}" class="sidebar-link"><i class="fas fa-brain"></i> AI Predictor</a>
+<a href="{% url 'ai_risk_dashboard' %}" class="sidebar-link"><i class="fas fa-exclamation-triangle"></i> Risk Dashboard</a>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🧪 Lab Reports</h1><p>View and track all lab results for your patients</p></div></div>
+<div class="card mb-3 p-3">
+  <form method="get" class="d-flex gap-2 flex-wrap align-items-end">
+    <div><label class="form-label" style="font-size:11px;">FLAG</label>
+      <select name="flag" class="form-select" style="width:140px;">
+        <option value="">All Flags</option>
+        <option value="Normal" {% if flag_filter == 'Normal' %}selected{% endif %}>Normal</option>
+        <option value="Abnormal" {% if flag_filter == 'Abnormal' %}selected{% endif %}>Abnormal</option>
+        <option value="Critical" {% if flag_filter == 'Critical' %}selected{% endif %}>Critical</option>
+      </select></div>
+    <button class="btn-primary-custom" style="height:38px;"><i class="fas fa-filter"></i> Filter</button>
+    <a href="{% url 'doctor_reports' %}" class="btn-secondary-custom" style="height:38px;">Reset</a>
+  </form>
+</div>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-custom w-100">
+      <thead><tr><th>Patient</th><th>Test</th><th>Result</th><th>Normal Range</th><th>Flag</th><th>Status</th><th>Date</th></tr></thead>
+      <tbody>
+        {% for r in reports %}
+        <tr>
+          <td style="font-weight:600;">{{ r.patient.name }}</td>
+          <td style="font-size:13px;">{{ r.test_name }}</td>
+          <td style="font-size:12px;color:#475569;">{{ r.result|truncatechars:40|default:"Pending" }}</td>
+          <td style="font-size:12px;color:#94a3b8;">{{ r.normal_range|default:"—" }}</td>
+          <td><span class="badge-status {% if r.abnormal_flag == 'Critical' %}badge-critical{% elif r.abnormal_flag == 'Abnormal' %}badge-pending{% else %}badge-approved{% endif %}">{{ r.abnormal_flag }}</span></td>
+          <td><span class="badge-status {% if r.status == 'Completed' %}badge-approved{% elif r.status == 'In Progress' %}badge-pending{% else %}badge-low{% endif %}">{{ r.status }}</span></td>
+          <td style="font-size:12px;color:#94a3b8;">{{ r.date|date:"d M Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-center text-muted p-4">No lab reports found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

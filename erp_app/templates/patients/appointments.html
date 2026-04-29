@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}My Appointments{% endblock %}
+{% block page_title %}My Appointments{% endblock %}
+{% block sidebar_links %}<div class="sidebar-section">Patient Portal</div>
+<a href="{% url 'patient_dashboard' %}" class="sidebar-link"><i class="fas fa-home"></i> Dashboard</a>
+<a href="{% url 'patient_book_appointment' %}" class="sidebar-link"><i class="fas fa-calendar-plus"></i> Book Appointment</a>
+<a href="{% url 'patient_appointments' %}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> My Appointments</a>
+<a href="{% url 'patient_prescriptions' %}" class="sidebar-link"><i class="fas fa-prescription-bottle-alt"></i> Prescriptions</a>
+<a href="{% url 'patient_reports' %}" class="sidebar-link"><i class="fas fa-flask"></i> Lab Reports</a>
+<a href="{% url 'patient_billing' %}" class="sidebar-link"><i class="fas fa-file-invoice-dollar"></i> Billing</a>
+<a href="{% url 'ai_prediction' %}" class="sidebar-link"><i class="fas fa-brain"></i> AI Check-up</a>
+<a href="{% url 'patient_notifications' %}" class="sidebar-link"><i class="fas fa-bell"></i> Notifications</a>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>📅 My Appointments</h1></div><a href="{% url 'patient_book_appointment' %}" class="btn-primary-custom"><i class="fas fa-plus"></i> Book New</a></div>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-custom w-100">
+      <thead><tr><th>Doctor</th><th>Date & Time</th><th>Type</th><th>Priority</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for a in appointments%}
+        <tr>
+          <td><div style="font-weight:600;">{{ a.doctor }}</div><div style="font-size:11px;color:#94a3b8;">{{ a.department|default:"General" }}</div></td>
+          <td><div style="font-weight:600;">{{ a.date }}</div><div style="font-size:11px;color:#94a3b8;">{{ a.time|default:"Time TBD" }}</div></td>
+          <td><span style="font-size:11px;background:#f0f9ff;color:#0369a1;padding:2px 9px;border-radius:10px;">{{ a.appointment_type }}</span></td>
+          <td><span class="badge-status {% if a.priority == 'Emergency' %}badge-emergency{% elif a.priority == 'High' %}badge-high{% else %}badge-normal{% endif %}" style="font-size:10px;">{{ a.priority }}</span></td>
+          <td><span class="badge-status badge-{{a.status|lower}}">{{ a.status }}</span></td>
+        </tr>
+        {%empty%}<tr><td colspan="5" class="text-center text-muted p-4">No appointments yet. <a href="{% url 'patient_book_appointment' %}">Book one!</a></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

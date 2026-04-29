@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Patients{% endblock %}
+{% block page_title %}All Patients{% endblock %}
+{% block sidebar_links %}<div class="sidebar-section">Reception</div>
+<a href="{% url 'reception_dashboard' %}" class="sidebar-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="{% url 'view_patients' %}" class="sidebar-link"><i class="fas fa-users"></i> Patients</a>
+<a href="{% url 'add_patient' %}" class="sidebar-link"><i class="fas fa-user-plus"></i> Add Patient</a>
+<a href="{% url 'reception_book_appointment' %}" class="sidebar-link"><i class="fas fa-calendar-plus"></i> Book Appointment</a>
+<a href="{% url 'view_appointments' %}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> Appointments</a>
+<a href="{% url 'billing_list' %}" class="sidebar-link"><i class="fas fa-file-invoice-dollar"></i> Billing</a>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>👥 Patient Registry</h1></div><a href="{% url 'add_patient' %}" class="btn-primary-custom"><i class="fas fa-user-plus"></i> Add Patient</a></div>
+<div class="card mb-3 p-3">
+  <form method="get" class="d-flex gap-2">
+    <input name="search" class="form-control" style="max-width:300px;" placeholder="Search by name or phone..." value="{{ search }}">
+    <button class="btn-primary-custom"><i class="fas fa-search"></i> Search</button>
+    {% if search%}<a href="{% url 'view_patients' %}" class="btn-secondary-custom">Clear</a>{% endif %}
+  </form>
+</div>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-custom w-100">
+      <thead><tr><th>Patient</th><th>Age / Gender</th><th>Blood Group</th><th>Phone</th><th>Registered</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for p in patients%}
+        <tr>
+          <td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar-circle">{{p.name|first|upper}}</div><div style="font-weight:600;">{{p.name}}</div></div></td>
+          <td style="font-size:13px;">{{p.age}}y · {{p.get_gender_display|default:"—"}}</td>
+          <td><span style="background:#fee2e2;color:#991b1b;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;">{{p.blood_group|default:"—"}}</span></td>
+          <td style="font-size:13px;">{{p.phone}}</td>
+          <td style="font-size:12px;color:#94a3b8;">{{p.registered_at|date:"d M Y"}}</td>
+          <td>
+            <div style="display:flex;gap:4px;">
+              <a href="{% url 'reception_patient_profile' p.id %}" class="btn btn-sm btn-outline-primary" style="font-size:10px;border-radius:5px;">Profile</a>
+              <a href="{% url 'reception_book_appointment' %}" class="btn btn-sm btn-outline-success" style="font-size:10px;border-radius:5px;">Book Appt</a>
+            </div>
+          </td>
+        </tr>
+        {%empty%}<tr><td colspan="6" class="text-center text-muted p-4">No patients found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}My Patients{% endblock %}
+{% block page_title %}My Patients{% endblock %}
+{% block sidebar_links %}
+<div class="sidebar-section">Doctor Portal</div>
+<a href="{% url 'doctor_dashboard' %}" class="sidebar-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="{% url 'doctor_appointments' %}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> Appointments</a>
+<a href="{% url 'doctor_patients' %}" class="sidebar-link active"><i class="fas fa-users"></i> My Patients</a>
+<a href="{% url 'doctor_prescriptions' %}" class="sidebar-link"><i class="fas fa-prescription-bottle-alt"></i> Prescriptions</a>
+<a href="{% url 'doctor_reports' %}" class="sidebar-link"><i class="fas fa-flask"></i> Lab Reports</a>
+<a href="{% url 'ai_risk_dashboard' %}" class="sidebar-link"><i class="fas fa-exclamation-triangle"></i> Risk Dashboard</a>
+{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>👥 My Patients</h1><p>All patients you have attended</p></div></div>
+<div class="card mb-3 p-3">
+  <form method="get" class="d-flex gap-2">
+    <input name="search" class="form-control" style="max-width:280px;" placeholder="Search by patient name..." value="{{ search }}">
+    <button class="btn-primary-custom"><i class="fas fa-search"></i> Search</button>
+    {% if search %}<a href="{% url 'doctor_patients' %}" class="btn-secondary-custom">Clear</a>{% endif %}
+  </form>
+</div>
+<div class="row g-3">
+  {% for p in patients %}
+  <div class="col-md-4 col-sm-6">
+    <div class="card p-0" style="transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+      <div style="padding:20px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+          <div class="avatar-circle" style="width:44px;height:44px;font-size:16px;">{{ p.name|first|upper }}</div>
+          <div>
+            <div style="font-weight:700;font-size:14px;">{{ p.name }}</div>
+            <div style="font-size:11px;color:#94a3b8;">{{ p.age }}y · {{ p.get_gender_display|default:"—" }} · {{ p.blood_group|default:"—" }}</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:12px;">
+          <span style="color:#64748b;"><i class="fas fa-phone" style="color:#94a3b8;margin-right:4px;"></i>{{ p.phone }}</span>
+          <span class="badge-status {% if p.risk_label == 'Critical' %}badge-critical{% elif p.risk_label == 'High' %}badge-high{% elif p.risk_label == 'Medium' %}badge-pending{% else %}badge-approved{% endif %}" style="font-size:10px;">{{ p.risk_label }} Risk</span>
+        </div>
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:12px;">{{ p.total_visits }} visits · Last: {{ p.last_visit|date:"d M Y"|default:"Never" }}</div>
+        <div style="display:flex;gap:6px;">
+          <a href="{% url 'patient_profile' p.id %}" class="btn-primary-custom" style="font-size:11px;padding:6px 12px;flex:1;justify-content:center;">View Profile</a>
+          <a href="{% url 'add_prescription' p.id %}" class="btn-secondary-custom" style="font-size:11px;padding:6px 10px;">Rx</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12 text-center p-5 text-muted">No patients found{% if search %} matching "{{ search }}"{% endif %}.</div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block title %}Doctor Dashboard — CuraSync AI{% endblock %}
+{% block page_title %}Doctor Dashboard{% endblock %}
+{% block sidebar_links %}
+<div class="sidebar-section">Doctor Portal</div>
+<a href="{% url 'doctor_dashboard' %}" class="sidebar-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="{% url 'doctor_appointments' %}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> Appointments</a>
+<a href="{% url 'doctor_patients' %}" class="sidebar-link"><i class="fas fa-users"></i> My Patients</a>
+<a href="{% url 'doctor_prescriptions' %}" class="sidebar-link"><i class="fas fa-prescription-bottle-alt"></i> Prescriptions</a>
+<a href="{% url 'doctor_reports' %}" class="sidebar-link"><i class="fas fa-flask"></i> Lab Reports</a>
+<a href="{% url 'assign_lab_test' %}" class="sidebar-link"><i class="fas fa-vials"></i> Assign Test</a>
+<div class="sidebar-section">AI Tools</div>
+<a href="{% url 'ai_prediction' %}" class="sidebar-link"><i class="fas fa-brain"></i> Disease Predictor</a>
+<a href="{% url 'ai_risk_dashboard' %}" class="sidebar-link"><i class="fas fa-exclamation-triangle"></i> Risk Dashboard</a>
+{% endblock %}
+{% block content %}
+{% if critical_reports %}
+<div style="background:#fee2e2;border-left:4px solid #ef4444;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px;">
+  <span style="font-size:20px;">🚨</span>
+  <div><strong style="color:#991b1b;">Critical Lab Alerts:</strong>
+    {% for r in critical_reports %}<div style="font-size:13px;color:#7f1d1d;margin-top:3px;">{{ r.patient.name }} — {{ r.test_name }}</div>{% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Doctor Profile Banner -->
+<div style="background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:14px;padding:24px 28px;margin-bottom:24px;display:flex;align-items:center;gap:18px;color:#fff;">
+  <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#0ea5e9,#6366f1);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;flex-shrink:0;">{{ request.user.first_name|first|upper|default:request.user.username|first|upper }}</div>
+  <div style="flex:1;">
+    <div style="font-size:20px;font-weight:800;">Dr. {{ request.user.get_full_name|default:request.user.username }}</div>
+    <div style="color:#94a3b8;font-size:13px;margin-top:4px;">{{ doctor.specialization }} {% if doctor.department %}· {{ doctor.department }}{% endif %} · {{ doctor.experience_years }} yrs exp</div>
+    <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;">
+      <span style="background:rgba(14,165,233,0.2);color:#38bdf8;padding:3px 12px;border-radius:20px;font-size:11px;font-weight:600;">⭐ {{ doctor.rating }}/5 Rating</span>
+      <span style="background:rgba(16,185,129,0.2);color:#34d399;padding:3px 12px;border-radius:20px;font-size:11px;font-weight:600;">📅 {{ doctor.available_days }}</span>
+      {% if doctor.is_available %}<span style="background:rgba(16,185,129,0.2);color:#34d399;padding:3px 12px;border-radius:20px;font-size:11px;font-weight:600;">🟢 Available</span>{% endif %}
+    </div>
+  </div>
+  <div style="text-align:right;color:#94a3b8;font-size:13px;">{{ today|date:"l, d M Y" }}</div>
+</div>
+
+<!-- KPI Stats -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-6"><div class="stat-card blue"><div class="stat-icon"><i class="fas fa-users" style="color:#0ea5e9"></i></div><div class="stat-label">Total Patients</div><div class="stat-value">{{ total_patients }}</div></div></div>
+  <div class="col-md-3 col-6"><div class="stat-card green"><div class="stat-icon"><i class="fas fa-calendar-day" style="color:#10b981"></i></div><div class="stat-label">Today's Appts</div><div class="stat-value">{{ today_count }}</div><div class="stat-sub">{{ completed_today }} completed</div></div></div>
+  <div class="col-md-3 col-6"><div class="stat-card orange"><div class="stat-icon"><i class="fas fa-clock" style="color:#f59e0b"></i></div><div class="stat-label">Pending</div><div class="stat-value">{{ pending_count }}</div></div></div>
+  <div class="col-md-3 col-6"><div class="stat-card purple"><div class="stat-icon"><i class="fas fa-calendar-check" style="color:#6366f1"></i></div><div class="stat-label">Total Appts</div><div class="stat-value">{{ total_appointments }}</div></div></div>
+</div>
+
+<div class="row g-3 mb-4">
+  <!-- Weekly Chart -->
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header-custom"><i class="fas fa-chart-bar text-primary"></i> Weekly Appointment Trend</div>
+      <div class="p-3"><div class="chart-wrapper"><canvas id="weeklyChart"></canvas></div></div>
+    </div>
+  </div>
+  <!-- Today's Schedule -->
+  <div class="col-md-5">
+    <div class="card h-100">
+      <div class="card-header-custom d-flex justify-content-between"><span><i class="fas fa-calendar-day text-success"></i> Today's Schedule</span><span style="font-size:12px;color:#94a3b8;">{{ today|date:"d M" }}</span></div>
+      <div style="max-height:240px;overflow-y:auto;">
+        {% for a in today_appts %}
+        <div style="padding:11px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:600;font-size:13px;">{{ a.patient.name }}</div>
+            <div style="font-size:11px;color:#94a3b8;">{{ a.time|default:"—" }} · {{ a.appointment_type }}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span class="badge-status {% if a.priority == 'Emergency' %}badge-emergency{% elif a.priority == 'High' %}badge-high{% else %}badge-normal{% endif %}" style="font-size:10px;">{{ a.priority }}</span>
+            <a href="{% url 'patient_profile' a.patient.id %}" style="font-size:11px;color:#0ea5e9;text-decoration:none;">View</a>
+          </div>
+        </div>
+        {% empty %}
+        <div class="p-4 text-center text-muted" style="font-size:13px;">No appointments today.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Recent Appointments -->
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header-custom d-flex justify-content-between"><span><i class="fas fa-calendar-alt text-primary"></i> Recent Appointments</span><a href="{% url 'doctor_appointments' %}" class="btn-primary-custom" style="font-size:11px;padding:4px 12px;">View All</a></div>
+      <div class="table-responsive">
+        <table class="table-custom w-100">
+          <thead><tr><th>Patient</th><th>Date</th><th>Type</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>
+            {% for a in today_appts|slice:":6" %}
+            <tr>
+              <td><div style="font-weight:600;font-size:13px;">{{ a.patient.name }}</div><div style="font-size:11px;color:#94a3b8;">{{ a.symptoms|truncatechars:30|default:"No symptoms noted" }}</div></td>
+              <td style="font-size:12px;">{{ a.date }}</td>
+              <td><span style="font-size:11px;background:#f0f9ff;color:#0369a1;padding:2px 8px;border-radius:10px;">{{ a.appointment_type }}</span></td>
+              <td><span class="badge-status badge-{{ a.status|lower }}">{{ a.status }}</span></td>
+              <td>
+                <div style="display:flex;gap:4px;">
+                  <a href="{% url 'patient_profile' a.patient.id %}" class="btn btn-sm btn-outline-primary" style="font-size:10px;border-radius:5px;padding:3px 8px;">Profile</a>
+                  {% if a.status == 'Approved' %}<a href="{% url 'add_prescription' a.patient.id %}" class="btn btn-sm btn-outline-success" style="font-size:10px;border-radius:5px;padding:3px 8px;">Rx</a>{% endif %}
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center text-muted p-3">No appointments found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <!-- Recent Prescriptions -->
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-header-custom d-flex justify-content-between"><span><i class="fas fa-prescription-bottle text-success"></i> Recent Prescriptions</span><a href="{% url 'doctor_prescriptions' %}" class="btn-primary-custom" style="font-size:11px;padding:4px 12px;">All</a></div>
+      <div style="max-height:300px;overflow-y:auto;">
+        {% for rx in recent_prescriptions %}
+        <div style="padding:12px 16px;border-bottom:1px solid #f1f5f9;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <div style="font-weight:600;font-size:13px;">{{ rx.patient.name }}</div>
+              <div style="font-size:11px;color:#64748b;margin-top:2px;">{{ rx.diagnosis|truncatechars:40|default:"—" }}</div>
+              <div style="font-size:10px;color:#94a3b8;margin-top:3px;">{{ rx.created_at|date:"d M Y" }}</div>
+            </div>
+            <a href="{% url 'prescription_detail' rx.id %}" style="font-size:11px;color:#0ea5e9;text-decoration:none;white-space:nowrap;">View →</a>
+          </div>
+        </div>
+        {% empty %}
+        <div class="p-4 text-center text-muted" style="font-size:13px;">No prescriptions yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const wd = {{ weekly_data|safe }};
+new Chart(document.getElementById('weeklyChart'),{type:'bar',data:{labels:wd.map(x=>x.day),datasets:[{label:'Appointments',data:wd.map(x=>x.count),backgroundColor:'rgba(14,165,233,0.8)',borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#f1f5f9'},ticks:{stepSize:1}},x:{grid:{display:false}}}}});
+</script>
+{% endblock %}

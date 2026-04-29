@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Prescription Detail{% endblock %}
+{% block page_title %}Prescription Detail{% endblock %}
+{% block sidebar_links %}<div class="sidebar-section">Doctor Portal</div>
+<a href="{% url 'doctor_dashboard' %}" class="sidebar-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="{% url 'doctor_appointments' %}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> Appointments</a>
+<a href="{% url 'doctor_patients' %}" class="sidebar-link"><i class="fas fa-users"></i> My Patients</a>
+<a href="{% url 'doctor_prescriptions' %}" class="sidebar-link"><i class="fas fa-prescription-bottle-alt"></i> Prescriptions</a>
+<a href="{% url 'doctor_reports' %}" class="sidebar-link"><i class="fas fa-flask"></i> Lab Reports</a>
+<a href="{% url 'assign_lab_test' %}" class="sidebar-link"><i class="fas fa-vials"></i> Assign Test</a>
+<div class="sidebar-section">AI Tools</div>
+<a href="{% url 'ai_prediction' %}" class="sidebar-link"><i class="fas fa-brain"></i> AI Predictor</a>
+<a href="{% url 'ai_risk_dashboard' %}" class="sidebar-link"><i class="fas fa-exclamation-triangle"></i> Risk Dashboard</a>{% endblock %}
+{% block content %}
+<div style="max-width:760px;margin:0 auto;">
+<div class="page-header">
+  <div><h1>💊 Prescription #{{ prescription.id }}</h1></div>
+  <div style="display:flex;gap:8px;">
+    <a href="{% url 'download_prescription' prescription.id %}" class="btn-primary-custom"><i class="fas fa-download"></i> Download PDF</a>
+    <a href="{% url 'doctor_prescriptions' %}" class="btn-secondary-custom">← Back</a>
+  </div>
+</div>
+<div class="card p-4 mb-3">
+  <div class="row g-3">
+    <div class="col-md-6"><div style="font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Patient</div><div style="font-weight:700;font-size:16px;margin-top:2px;">{{ prescription.patient.name|default:"—" }}</div></div>
+    <div class="col-md-6"><div style="font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Doctor</div><div style="font-weight:700;font-size:16px;margin-top:2px;">{{ prescription.doctor }}</div></div>
+    <div class="col-md-6"><div style="font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Date Issued</div><div style="font-weight:600;margin-top:2px;">{{ prescription.created_at|date:"d M Y, H:i" }}</div></div>
+    <div class="col-md-6"><div style="font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Follow-up</div><div style="font-weight:600;margin-top:2px;">{{ prescription.follow_up_date|default:"Not scheduled" }}</div></div>
+    {% if prescription.diagnosis %}<div class="col-12"><div style="font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Diagnosis</div><div style="margin-top:4px;background:#f8fafc;border-radius:8px;padding:10px 14px;font-size:13.5px;">{{ prescription.diagnosis }}</div></div>{% endif %}
+  </div>
+</div>
+<div class="card mb-3">
+  <div class="card-header-custom"><i class="fas fa-pills text-success"></i> Medicines ({{ prescription.items.count }})</div>
+  <div class="table-responsive">
+    <table class="table-custom w-100">
+      <thead><tr><th>#</th><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Days</th><th>Instructions</th></tr></thead>
+      <tbody>
+        {% for item in prescription.items.all %}
+        <tr>
+          <td style="color:#94a3b8;">{{ forloop.counter }}</td>
+          <td style="font-weight:600;">{{ item.medicine }}</td>
+          <td>{{ item.dosage }}</td>
+          <td>{{ item.frequency|default:"Once daily" }}</td>
+          <td>{{ item.days|default:"—" }}</td>
+          <td style="font-size:12px;color:#64748b;">{{ item.instructions|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% if prescription.notes %}<div class="card p-4"><div style="font-size:12px;color:#94a3b8;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Notes</div><div style="font-size:13.5px;color:#475569;">{{ prescription.notes }}</div></div>{% endif %}
+</div>
+{% endblock %}

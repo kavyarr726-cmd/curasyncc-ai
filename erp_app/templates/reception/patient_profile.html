@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Patient Profile{% endblock %}
+{% block page_title %}Patient Profile{% endblock %}
+{% block sidebar_links %}<div class="sidebar-section">Reception</div>
+<a href="{% url 'reception_dashboard' %}" class="sidebar-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="{% url 'view_patients' %}" class="sidebar-link"><i class="fas fa-users"></i> Patients</a>
+<a href="{% url 'add_patient' %}" class="sidebar-link"><i class="fas fa-user-plus"></i> Add Patient</a>
+<a href="{% url 'reception_book_appointment' %}" class="sidebar-link"><i class="fas fa-calendar-plus"></i> Book Appointment</a>
+<a href="{% url 'view_appointments' %}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> Appointments</a>
+<a href="{% url 'billing_list' %}" class="sidebar-link"><i class="fas fa-file-invoice-dollar"></i> Billing</a>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>👤 {{ patient.name }}</h1></div><a href="{% url 'reception_book_appointment' %}" class="btn-primary-custom"><i class="fas fa-calendar-plus"></i> Book Appointment</a></div>
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card p-4">
+      <div class="text-center mb-3"><div class="avatar-circle" style="width:56px;height:56px;font-size:20px;margin:0 auto;">{{patient.name|first|upper}}</div></div>
+      <div style="font-size:13px;line-height:2;"><div><strong>Age:</strong> {{patient.age}} · {{patient.get_gender_display|default:"—"}}</div><div><strong>Blood:</strong> <span style="color:#ef4444;font-weight:700;">{{patient.blood_group|default:"Unknown"}}</span></div><div><strong>Phone:</strong> {{patient.phone}}</div><div><strong>Email:</strong> {{patient.email|default:"—"}}</div>{% if patient.allergies%}<div style="margin-top:8px;background:#fee2e2;border-radius:6px;padding:6px 10px;font-size:12px;color:#991b1b;">⚠ {{patient.allergies}}</div>{% endif %}</div>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header-custom"><i class="fas fa-calendar-alt text-primary"></i> Appointments</div>
+      <div class="table-responsive">
+        <table class="table-custom w-100">
+          <thead><tr><th>Date</th><th>Doctor</th><th>Type</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for a in appointments%}
+            <tr>
+              <td style="font-weight:600;">{{a.date}}</td>
+              <td style="font-size:13px;">{{a.doctor}}</td>
+              <td style="font-size:12px;">{{a.appointment_type}}</td>
+              <td><span class="badge-status badge-{{a.status|lower}}">{{a.status}}</span></td>
+            </tr>
+            {%empty%}<tr><td colspan="4" class="text-center text-muted p-3" style="font-size:13px;">No appointments.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

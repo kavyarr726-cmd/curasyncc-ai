@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Medicine Inventory{% endblock %}
+{% block page_title %}Medicine Inventory{% endblock %}
+{% block sidebar_links %}
+<div class="sidebar-section">Pharmacy</div>
+<a href="{% url 'pharmacy_dashboard' %}" class="sidebar-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="{% url 'pharmacy_inventory' %}" class="sidebar-link active"><i class="fas fa-boxes"></i> Inventory</a>
+<a href="{% url 'add_medicine' %}" class="sidebar-link"><i class="fas fa-plus-circle"></i> Add Medicine</a>
+<a href="{% url 'dispense_medicine' %}" class="sidebar-link"><i class="fas fa-hand-holding-medical"></i> Dispense</a>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>📦 Medicine Inventory</h1><p>Manage all medicines and stock levels</p></div>
+  <a href="{% url 'add_medicine' %}" class="btn-primary-custom"><i class="fas fa-plus"></i> Add Medicine</a>
+</div>
+<div class="card mb-3 p-3">
+  <form method="get" class="d-flex gap-2 flex-wrap align-items-end">
+    <div><label class="form-label" style="font-size:11px;">SEARCH</label><input name="search" class="form-control" style="width:200px;" placeholder="Medicine name..." value="{{ search }}"></div>
+    <div><label class="form-label" style="font-size:11px;">CATEGORY</label>
+      <select name="category" class="form-select" style="width:160px;">
+        <option value="">All Categories</option>
+        {% for val,label in categories %}<option value="{{ val }}" {% if cat_filter == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="btn-primary-custom" style="height:38px;"><i class="fas fa-search"></i> Filter</button>
+    <a href="{% url 'pharmacy_inventory' %}" class="btn-secondary-custom" style="height:38px;">Reset</a>
+  </form>
+</div>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-custom w-100">
+      <thead><tr><th>Medicine</th><th>Category</th><th>Stock</th><th>Reorder At</th><th>Price/Unit</th><th>Expiry</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for med in medicines %}
+        <tr>
+          <td><div style="font-weight:600;font-size:13.5px;">{{ med.name }}</div><div style="font-size:11px;color:#94a3b8;">{{ med.generic_name|default:"" }} · {{ med.unit }}</div></td>
+          <td><span style="padding:2px 9px;border-radius:20px;font-size:11px;background:#f0f9ff;color:#0369a1;">{{ med.category }}</span></td>
+          <td>
+            <div style="font-weight:700;font-size:15px;color:{% if med.stock_quantity == 0 %}#ef4444{% elif med.is_low_stock %}#f59e0b{% else %}#10b981{% endif %};">{{ med.stock_quantity }}</div>
+            <div style="font-size:10px;color:#94a3b8;">{{ med.unit }}s</div>
+          </td>
+          <td style="font-size:13px;">{{ med.reorder_level }}</td>
+          <td style="font-weight:600;color:#0ea5e9;">₹{{ med.price_per_unit }}</td>
+          <td style="font-size:12px;color:{% if med.expiry_date %}{% if med.expiry_date < today %}#ef4444{% else %}#64748b{% endif %}{% else %}#94a3b8{% endif %};">{{ med.expiry_date|default:"—" }}</td>
+          <td>
+            {% if med.stock_quantity == 0 %}<span class="badge-status badge-cancelled">Out of Stock</span>
+            {% elif med.is_low_stock %}<span class="badge-status badge-pending">Low Stock</span>
+            {% else %}<span class="badge-status badge-approved">In Stock</span>{% endif %}
+          </td>
+          <td><a href="{% url 'update_stock' med.id %}" class="btn btn-sm btn-outline-primary" style="font-size:11px;border-radius:6px;"><i class="fas fa-edit"></i> Stock</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" class="text-center text-muted p-4">No medicines found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

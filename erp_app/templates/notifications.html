@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block sidebar_links %}
+<a href="{% url 'redirect_dashboard' %}" class="sidebar-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="{% url 'notifications_list' %}" class="sidebar-link active"><i class="fas fa-bell"></i> Notifications</a>
+{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🔔 Notifications</h1><p>All your recent alerts and updates</p></div></div>
+<div style="max-width:720px;margin:0 auto;">
+  {% for n in notifications %}
+  <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;">
+    <div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;background:{% if n.notif_type == 'appointment' %}#dbeafe{% elif n.notif_type == 'lab' %}#fef3c7{% elif n.notif_type == 'billing' %}#d1fae5{% elif n.notif_type == 'alert' %}#fee2e2{% else %}#f1f5f9{% endif %};">
+      {% if n.notif_type == 'appointment' %}📅{% elif n.notif_type == 'lab' %}🧪{% elif n.notif_type == 'billing' %}💰{% elif n.notif_type == 'alert' %}🚨{% else %}🔔{% endif %}
+    </div>
+    <div style="flex:1;">
+      <div style="font-weight:700;font-size:14px;color:#1e293b;">{{ n.title }}</div>
+      <div style="font-size:13px;color:#475569;margin-top:3px;">{{ n.message }}</div>
+      <div style="font-size:11px;color:#94a3b8;margin-top:6px;">{{ n.created_at|date:"d M Y, H:i" }}</div>
+    </div>
+    <span style="padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:#f1f5f9;color:#64748b;">{{ n.notif_type }}</span>
+  </div>
+  {% empty %}
+  <div class="text-center p-5"><div style="font-size:48px;">🔕</div><h5 style="color:#64748b;margin-top:16px;">No notifications yet</h5></div>
+  {% endfor %}
+</div>
+{% endblock %}

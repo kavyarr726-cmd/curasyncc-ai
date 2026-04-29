@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Book Appointment{% endblock %}
+{% block page_title %}Book Appointment{% endblock %}
+{% block sidebar_links %}<div class="sidebar-section">Patient Portal</div>
+<a href="{% url 'patient_dashboard' %}" class="sidebar-link"><i class="fas fa-home"></i> Dashboard</a>
+<a href="{% url 'patient_book_appointment' %}" class="sidebar-link"><i class="fas fa-calendar-plus"></i> Book Appointment</a>
+<a href="{% url 'patient_appointments' %}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> My Appointments</a>
+<a href="{% url 'patient_prescriptions' %}" class="sidebar-link"><i class="fas fa-prescription-bottle-alt"></i> Prescriptions</a>
+<a href="{% url 'patient_reports' %}" class="sidebar-link"><i class="fas fa-flask"></i> Lab Reports</a>
+<a href="{% url 'patient_billing' %}" class="sidebar-link"><i class="fas fa-file-invoice-dollar"></i> Billing</a>
+<a href="{% url 'ai_prediction' %}" class="sidebar-link"><i class="fas fa-brain"></i> AI Check-up</a>
+<a href="{% url 'patient_notifications' %}" class="sidebar-link"><i class="fas fa-bell"></i> Notifications</a>{% endblock %}
+{% block content %}
+<div style="max-width:680px;margin:0 auto;">
+<div class="page-header"><div><h1>📅 Book Appointment</h1><p>Schedule a consultation with a doctor</p></div></div>
+<div class="card p-4">
+  <form method="post">{% csrf_token %}
+    <div class="row g-3">
+      <div class="col-md-6"><label class="form-label">Doctor *</label>
+        <select name="doctor" class="form-select" required onchange="updateFee(this)">
+          <option value="">— Select Doctor —</option>
+          {% for d in doctors%}<option value="{{d.id}}" data-fee="{{d.consultation_fee}}">Dr. {{d.user.get_full_name}} — {{d.specialization}} (₹{{d.consultation_fee}})</option>{% endfor %}
+        </select></div>
+      <div class="col-md-6"><label class="form-label">Department</label>
+        <select name="department" class="form-select">
+          <option value="">— Select Department —</option>
+          {% for dept in departments%}<option value="{{dept.name}}">{{dept.name}}</option>{% endfor %}
+        </select></div>
+      <div class="col-md-6"><label class="form-label">Appointment Date *</label><input name="date" type="date" class="form-control" required min="{{today_str}}"></div>
+      <div class="col-md-6"><label class="form-label">Preferred Time *</label>
+        <select name="time" class="form-select" required>
+          <option value="">— Select Slot —</option>
+          <option>09:00 AM</option><option>09:30 AM</option><option>10:00 AM</option><option>10:30 AM</option>
+          <option>11:00 AM</option><option>11:30 AM</option><option>02:00 PM</option><option>02:30 PM</option>
+          <option>03:00 PM</option><option>03:30 PM</option><option>04:00 PM</option><option>04:30 PM</option>
+        </select></div>
+      <div class="col-md-6"><label class="form-label">Type</label>
+        <select name="type" class="form-select"><option value="OPD">OPD</option><option value="Follow-up">Follow-up</option><option value="Teleconsult">Teleconsult</option></select></div>
+      <div class="col-md-6"><label class="form-label">Consultation Fee</label><input id="feeDisplay" class="form-control" readonly style="background:#f8fafc;font-weight:700;color:#0ea5e9;" value="Select a doctor"></div>
+      <div class="col-12"><label class="form-label">Symptoms / Reason *</label>
+        <textarea name="symptoms" class="form-control" rows="3" required placeholder="Describe your symptoms in detail..."></textarea>
+        <div style="font-size:11px;color:#94a3b8;margin-top:4px;">💡 AI will auto-assign priority based on your symptoms</div></div>
+      <div class="col-12 d-flex gap-2 mt-2">
+        <button type="submit" class="btn-primary-custom"><i class="fas fa-calendar-check"></i> Confirm Booking</button>
+        <a href="{% url 'patient_dashboard' %}" class="btn-secondary-custom">Cancel</a>
+      </div>
+    </div>
+  </form>
+</div>
+</div>
+<script>
+function updateFee(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  document.getElementById('feeDisplay').value = opt.dataset.fee ? '₹' + opt.dataset.fee : 'Select a doctor';
+}
+const today = new Date().toISOString().split('T')[0];
+document.querySelector('[name=date]').setAttribute('min', today);
+</script>
+{% endblock %}

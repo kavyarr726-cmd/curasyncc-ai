@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Add Medicine{% endblock %}
+{% block page_title %}Add Medicine{% endblock %}
+{% block sidebar_links %}
+<div class="sidebar-section">Pharmacy</div>
+<a href="{% url 'pharmacy_dashboard' %}" class="sidebar-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="{% url 'pharmacy_inventory' %}" class="sidebar-link"><i class="fas fa-boxes"></i> Inventory</a>
+<a href="{% url 'add_medicine' %}" class="sidebar-link active"><i class="fas fa-plus-circle"></i> Add Medicine</a>
+<a href="{% url 'dispense_medicine' %}" class="sidebar-link"><i class="fas fa-hand-holding-medical"></i> Dispense</a>
+{% endblock %}
+{% block content %}
+<div style="max-width:680px;margin:0 auto;">
+  <div class="page-header"><div><h1>➕ Add Medicine</h1><p>Add a new medicine to the inventory</p></div></div>
+  <div class="card p-4">
+    <form method="post">{% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-6"><label class="form-label">Medicine Name *</label><input name="name" class="form-control" required placeholder="e.g. Paracetamol 500mg"></div>
+        <div class="col-md-6"><label class="form-label">Generic Name</label><input name="generic_name" class="form-control" placeholder="e.g. Acetaminophen"></div>
+        <div class="col-md-6"><label class="form-label">Category</label>
+          <select name="category" class="form-select">{% for val,label in categories %}<option value="{{ val }}">{{ label }}</option>{% endfor %}</select></div>
+        <div class="col-md-6"><label class="form-label">Manufacturer</label><input name="manufacturer" class="form-control" placeholder="e.g. Sun Pharma"></div>
+        <div class="col-md-4"><label class="form-label">Unit</label>
+          <select name="unit" class="form-select"><option>Tablet</option><option>Capsule</option><option>Syrup</option><option>Injection</option><option>Cream</option><option>Drop</option></select></div>
+        <div class="col-md-4"><label class="form-label">Stock Quantity *</label><input name="stock_quantity" type="number" class="form-control" required min="0" value="0"></div>
+        <div class="col-md-4"><label class="form-label">Reorder Level</label><input name="reorder_level" type="number" class="form-control" value="50" min="0"></div>
+        <div class="col-md-6"><label class="form-label">Price per Unit (₹) *</label><input name="price_per_unit" type="number" step="0.01" class="form-control" required placeholder="0.00"></div>
+        <div class="col-md-6"><label class="form-label">Expiry Date</label><input name="expiry_date" type="date" class="form-control"></div>
+        <div class="col-12 d-flex gap-2 mt-2">
+          <button type="submit" class="btn-primary-custom"><i class="fas fa-save"></i> Add Medicine</button>
+          <a href="{% url 'pharmacy_inventory' %}" class="btn-secondary-custom">Cancel</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

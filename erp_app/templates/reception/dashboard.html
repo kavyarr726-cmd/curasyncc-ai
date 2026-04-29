@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Reception Dashboard{% endblock %}
+{% block page_title %}Reception Dashboard{% endblock %}
+{% block sidebar_links %}<div class="sidebar-section">Reception</div>
+<a href="{% url 'reception_dashboard' %}" class="sidebar-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="{% url 'view_patients' %}" class="sidebar-link"><i class="fas fa-users"></i> Patients</a>
+<a href="{% url 'add_patient' %}" class="sidebar-link"><i class="fas fa-user-plus"></i> Add Patient</a>
+<a href="{% url 'reception_book_appointment' %}" class="sidebar-link"><i class="fas fa-calendar-plus"></i> Book Appointment</a>
+<a href="{% url 'view_appointments' %}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> Appointments</a>
+<a href="{% url 'billing_list' %}" class="sidebar-link"><i class="fas fa-file-invoice-dollar"></i> Billing</a>{% endblock %}
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-6"><div class="stat-card blue"><div class="stat-icon"><i class="fas fa-users" style="color:#0ea5e9"></i></div><div class="stat-label">Total Patients</div><div class="stat-value">{{ total_patients }}</div></div></div>
+  <div class="col-md-3 col-6"><div class="stat-card green"><div class="stat-icon"><i class="fas fa-calendar-day" style="color:#10b981"></i></div><div class="stat-label">Today's Appts</div><div class="stat-value">{{ today_appointments }}</div></div></div>
+  <div class="col-md-3 col-6"><div class="stat-card orange"><div class="stat-icon"><i class="fas fa-clock" style="color:#f59e0b"></i></div><div class="stat-label">Pending</div><div class="stat-value">{{ pending }}</div></div></div>
+  <div class="col-md-3 col-6"><div class="stat-card purple"><div class="stat-icon"><i class="fas fa-calendar-check" style="color:#6366f1"></i></div><div class="stat-label">Total Appts</div><div class="stat-value">{{ total_appointments }}</div></div></div>
+</div>
+<div class="row g-3 mb-3" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px !important;">
+  <a href="{% url 'add_patient' %}" class="btn-primary-custom"><i class="fas fa-user-plus"></i> Register Patient</a>
+  <a href="{% url 'reception_book_appointment' %}" class="btn-secondary-custom"><i class="fas fa-calendar-plus"></i> Book Appointment</a>
+  <a href="{% url 'create_invoice' %}" class="btn-secondary-custom"><i class="fas fa-file-invoice"></i> Create Invoice</a>
+</div>
+<div class="row g-3">
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header-custom"><i class="fas fa-calendar-alt text-primary"></i> Today's Appointments</div>
+      <div class="table-responsive">
+        <table class="table-custom w-100">
+          <thead><tr><th>Patient</th><th>Doctor</th><th>Time</th><th>Type</th><th>Priority</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>
+            {% for a in appointments%}
+            <tr>
+              <td style="font-weight:600;font-size:13px;">{{ a.patient.name }}</td>
+              <td style="font-size:12px;">{{ a.doctor }}</td>
+              <td style="font-size:12px;">{{ a.time|default:"—" }}</td>
+              <td><span style="font-size:10px;background:#f0f9ff;color:#0369a1;padding:2px 8px;border-radius:10px;">{{ a.appointment_type }}</span></td>
+              <td><span class="badge-status {% if a.priority == 'Emergency'%}badge-emergency{% elif a.priority == 'High'%}badge-high{% else %}badge-normal{% endif %}" style="font-size:10px;">{{ a.priority }}</span></td>
+              <td><span class="badge-status badge-{{a.status|lower}}" style="font-size:10px;">{{ a.status }}</span></td>
+              <td>
+                {% if a.status == 'Pending'%}<a href="{% url 'update_status' a.id 'Approved' %}" class="btn btn-sm btn-outline-success" style="font-size:10px;border-radius:5px;">Approve</a>{% endif %}
+              </td>
+            </tr>
+            {%empty%}<tr><td colspan="7" class="text-center text-muted p-3" style="font-size:13px;">No appointments today.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-header-custom d-flex justify-content-between"><span><i class="fas fa-user-plus text-success"></i> Recent Patients</span><a href="{% url 'add_patient' %}" class="btn-primary-custom" style="font-size:11px;padding:4px 10px;">+ Add</a></div>
+      {% for p in recent_patients%}
+      <div style="padding:11px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+        <div><div style="font-weight:600;font-size:13px;">{{ p.name }}</div><div style="font-size:11px;color:#94a3b8;">{{ p.age }}y · {{ p.phone }}</div></div>
+        <a href="{% url 'reception_patient_profile' p.id %}" style="font-size:11px;color:#0ea5e9;text-decoration:none;">View →</a>
+      </div>
+      {%empty%}<div class="p-4 text-center text-muted" style="font-size:13px;">No patients registered.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

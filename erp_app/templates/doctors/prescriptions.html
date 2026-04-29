@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Prescriptions{% endblock %}
+{% block page_title %}Prescriptions{% endblock %}
+{% block sidebar_links %}<div class="sidebar-section">Doctor Portal</div>
+<a href="{% url 'doctor_dashboard' %}" class="sidebar-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="{% url 'doctor_appointments' %}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> Appointments</a>
+<a href="{% url 'doctor_patients' %}" class="sidebar-link"><i class="fas fa-users"></i> My Patients</a>
+<a href="{% url 'doctor_prescriptions' %}" class="sidebar-link"><i class="fas fa-prescription-bottle-alt"></i> Prescriptions</a>
+<a href="{% url 'doctor_reports' %}" class="sidebar-link"><i class="fas fa-flask"></i> Lab Reports</a>
+<a href="{% url 'assign_lab_test' %}" class="sidebar-link"><i class="fas fa-vials"></i> Assign Test</a>
+<div class="sidebar-section">AI Tools</div>
+<a href="{% url 'ai_prediction' %}" class="sidebar-link"><i class="fas fa-brain"></i> AI Predictor</a>
+<a href="{% url 'ai_risk_dashboard' %}" class="sidebar-link"><i class="fas fa-exclamation-triangle"></i> Risk Dashboard</a>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>💊 My Prescriptions</h1><p>All prescriptions you have written</p></div></div>
+<div class="card mb-3 p-3">
+  <form method="get" class="d-flex gap-2">
+    <input name="search" class="form-control" style="max-width:280px;" placeholder="Search by patient name..." value="{{ search }}">
+    <button class="btn-primary-custom"><i class="fas fa-search"></i> Search</button>
+    {% if search %}<a href="{% url 'doctor_prescriptions' %}" class="btn-secondary-custom">Clear</a>{% endif %}
+  </form>
+</div>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-custom w-100">
+      <thead><tr><th>Patient</th><th>Diagnosis</th><th>Medicines</th><th>Date</th><th>Follow-up</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for rx in prescriptions %}
+        <tr>
+          <td style="font-weight:600;">{{ rx.patient.name }}</td>
+          <td style="font-size:13px;color:#64748b;">{{ rx.diagnosis|truncatechars:40|default:"—" }}</td>
+          <td style="font-size:12px;">
+            {% for item in rx.items.all|slice:":2" %}<span style="background:#f0fdf4;color:#166534;padding:2px 8px;border-radius:10px;font-size:11px;margin-right:4px;">{{ item.medicine }}</span>{% endfor %}
+            {% if rx.items.count > 2 %}<span style="color:#94a3b8;font-size:11px;">+{{ rx.items.count|add:"-2" }} more</span>{% endif %}
+          </td>
+          <td style="font-size:12px;color:#94a3b8;">{{ rx.created_at|date:"d M Y" }}</td>
+          <td style="font-size:12px;">{{ rx.follow_up_date|default:"—" }}</td>
+          <td>
+            <div style="display:flex;gap:4px;">
+              <a href="{% url 'prescription_detail' rx.id %}" class="btn btn-sm btn-outline-primary" style="font-size:10px;border-radius:5px;">View</a>
+              <a href="{% url 'download_prescription' rx.id %}" class="btn btn-sm btn-outline-secondary" style="font-size:10px;border-radius:5px;"><i class="fas fa-download"></i></a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-muted p-4">No prescriptions found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

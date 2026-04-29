@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Book Appointment{% endblock %}
+{% block page_title %}Book Appointment{% endblock %}
+{% block sidebar_links %}<div class="sidebar-section">Reception</div>
+<a href="{% url 'reception_dashboard' %}" class="sidebar-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="{% url 'view_patients' %}" class="sidebar-link"><i class="fas fa-users"></i> Patients</a>
+<a href="{% url 'add_patient' %}" class="sidebar-link"><i class="fas fa-user-plus"></i> Add Patient</a>
+<a href="{% url 'reception_book_appointment' %}" class="sidebar-link"><i class="fas fa-calendar-plus"></i> Book Appointment</a>
+<a href="{% url 'view_appointments' %}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> Appointments</a>
+<a href="{% url 'billing_list' %}" class="sidebar-link"><i class="fas fa-file-invoice-dollar"></i> Billing</a>{% endblock %}
+{% block content %}
+<div style="max-width:700px;margin:0 auto;">
+<div class="page-header"><div><h1>📅 Book Appointment</h1></div></div>
+<div class="card p-4">
+  <form method="post">{% csrf_token %}
+    <div class="row g-3">
+      <div class="col-md-6"><label class="form-label">Patient *</label><select name="patient" class="form-select" required><option value="">— Select Patient —</option>{% for p in patients%}<option value="{{p.id}}">{{p.name}} ({{p.phone}})</option>{% endfor %}</select></div>
+      <div class="col-md-6"><label class="form-label">Doctor *</label><select name="doctor" class="form-select" required><option value="">— Select Doctor —</option>{% for d in doctors%}<option value="{{d.id}}">{{d.user.get_full_name}} — {{d.specialization}}</option>{% endfor %}</select></div>
+      <div class="col-md-6"><label class="form-label">Date *</label><input name="date" type="date" class="form-control" required></div>
+      <div class="col-md-6"><label class="form-label">Time *</label><select name="time" class="form-select" required><option value="">— Slot —</option><option>09:00 AM</option><option>09:30 AM</option><option>10:00 AM</option><option>10:30 AM</option><option>11:00 AM</option><option>11:30 AM</option><option>02:00 PM</option><option>02:30 PM</option><option>03:00 PM</option><option>03:30 PM</option><option>04:00 PM</option></select></div>
+      <div class="col-md-6"><label class="form-label">Type</label><select name="type" class="form-select"><option value="OPD">OPD</option><option value="IPD">IPD</option><option value="Emergency">Emergency</option><option value="Follow-up">Follow-up</option></select></div>
+      <div class="col-md-6"><label class="form-label">Priority</label><select name="priority" class="form-select"><option value="">AI Auto-Detect</option><option value="Normal">Normal</option><option value="High">High</option><option value="Emergency">Emergency</option></select></div>
+      <div class="col-12"><label class="form-label">Symptoms</label><textarea name="symptoms" class="form-control" rows="3" placeholder="Describe symptoms..."></textarea></div>
+      <div class="col-12 d-flex gap-2 mt-2">
+        <button type="submit" class="btn-primary-custom"><i class="fas fa-calendar-check"></i> Book Appointment</button>
+        <a href="{% url 'view_appointments' %}" class="btn-secondary-custom">Cancel</a>
+      </div>
+    </div>
+  </form>
+</div>
+</div>
+{% endblock %}

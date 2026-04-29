@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block title %}Patient Profile{% endblock %}
+{% block page_title %}Patient Profile{% endblock %}
+{% block sidebar_links %}
+<div class="sidebar-section">Doctor Portal</div>
+<a href="{% url 'doctor_dashboard' %}" class="sidebar-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="{% url 'doctor_appointments' %}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> Appointments</a>
+<a href="{% url 'doctor_patients' %}" class="sidebar-link active"><i class="fas fa-users"></i> My Patients</a>
+<a href="{% url 'doctor_prescriptions' %}" class="sidebar-link"><i class="fas fa-prescription-bottle-alt"></i> Prescriptions</a>
+<a href="{% url 'doctor_reports' %}" class="sidebar-link"><i class="fas fa-flask"></i> Lab Reports</a>
+<a href="{% url 'ai_risk_dashboard' %}" class="sidebar-link"><i class="fas fa-exclamation-triangle"></i> Risk Dashboard</a>
+{% endblock %}
+{% block content %}
+<!-- Patient Header -->
+<div style="background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:14px;padding:24px 28px;margin-bottom:24px;color:#fff;display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">
+  <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#0ea5e9,#6366f1);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;flex-shrink:0;">{{ patient.name|first|upper }}</div>
+  <div style="flex:1;min-width:200px;">
+    <div style="font-size:22px;font-weight:800;">{{ patient.name }}</div>
+    <div style="color:#94a3b8;margin-top:4px;font-size:13px;">{{ patient.age }}y · {{ patient.get_gender_display|default:"—" }} · Blood: <strong style="color:#f87171;">{{ patient.blood_group|default:"Unknown" }}</strong></div>
+    <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;font-size:12px;">
+      <span style="color:#94a3b8;"><i class="fas fa-phone" style="margin-right:4px;"></i>{{ patient.phone }}</span>
+      {% if patient.email %}<span style="color:#94a3b8;"><i class="fas fa-envelope" style="margin-right:4px;"></i>{{ patient.email }}</span>{% endif %}
+    </div>
+    {% if patient.allergies %}<div style="margin-top:10px;background:rgba(239,68,68,0.15);border-radius:6px;padding:6px 12px;font-size:12px;color:#fca5a5;">⚠ Allergies: {{ patient.allergies }}</div>{% endif %}
+    {% if patient.chronic_conditions %}<div style="margin-top:6px;background:rgba(245,158,11,0.15);border-radius:6px;padding:6px 12px;font-size:12px;color:#fcd34d;">🏥 Conditions: {{ patient.chronic_conditions }}</div>{% endif %}
+  </div>
+  <div style="text-align:right;">
+    <div style="font-size:12px;color:#64748b;margin-bottom:4px;">AI Risk Score</div>
+    <div style="font-size:32px;font-weight:900;color:{% if risk_label == 'Critical' %}#ef4444{% elif risk_label == 'High' %}#f97316{% elif risk_label == 'Medium' %}#f59e0b{% else %}#10b981{% endif %};">{{ risk_score|floatformat:0 }}</div>
+    <span class="badge-status {% if risk_label == 'Critical' %}badge-critical{% elif risk_label == 'High' %}badge-high{% elif risk_label == 'Medium' %}badge-pending{% else %}badge-approved{% endif %}">{{ risk_label }} Risk</span>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;">
+  <a href="{% url 'add_prescription' patient.id %}" class="btn-primary-custom"><i class="fas fa-prescription-bottle-alt"></i> Write Prescription</a>
+  <a href="{% url 'assign_lab_test' %}" class="btn-secondary-custom"><i class="fas fa-vials"></i> Assign Lab Test</a>
+</div>
+
+<!-- Add Vitals Form -->
+<div class="card p-4 mb-4">
+  <div class="card-header-custom" style="padding:0 0 14px;border-bottom:1px solid #f1f5f9;margin-bottom:16px;"><i class="fas fa-heartbeat text-danger"></i> Record Vitals</div>
+  <form method="post">{% csrf_token %}<input type="hidden" name="action" value="add_vitals">
+    <div class="row g-3">
+      <div class="col-md-2 col-6"><label class="form-label">Systolic BP</label><input name="systolic" type="number" class="form-control" placeholder="mmHg"></div>
+      <div class="col-md-2 col-6"><label class="form-label">Diastolic BP</label><input name="diastolic" type="number" class="form-control" placeholder="mmHg"></div>
+      <div class="col-md-2 col-6"><label class="form-label">Heart Rate</label><input name="heart_rate" type="number" class="form-control" placeholder="bpm"></div>
+      <div class="col-md-2 col-6"><label class="form-label">Temp (°C)</label><input name="temperature" type="number" step="0.1" class="form-control" placeholder="°C"></div>
+      <div class="col-md-2 col-6"><label class="form-label">SpO2 (%)</label><input name="spo2" type="number" class="form-control" placeholder="%"></div>
+      <div class="col-md-2 col-6"><label class="form-label">Blood Sugar</label><input name="blood_sugar" type="number" class="form-control" placeholder="mg/dL"></div>
+      <div class="col-md-2 col-6"><label class="form-label">Weight (kg)</label><input name="weight" type="number" step="0.1" class="form-control" placeholder="kg"></div>
+      <div class="col-md-2 col-6"><label class="form-label">Height (cm)</label><input name="height" type="number" step="0.1" class="form-control" placeholder="cm"></div>
+      <div class="col-md-6"><label class="form-label">Notes</label><input name="notes" class="form-control" placeholder="Clinical notes..."></div>
+      <div class="col-md-2 d-flex align-items-end"><button type="submit" class="btn-primary-custom w-100"><i class="fas fa-save"></i> Save</button></div>
+    </div>
+  </form>
+</div>
+
+<!-- Vitals Chart -->
+{% if vitals %}
+<div class="card mb-4">
+  <div class="card-header-custom"><i class="fas fa-chart-line text-danger"></i> Vitals Trend</div>
+  <div class="p-3"><div style="height:200px;"><canvas id="vitalsChart"></canvas></div></div>
+</div>
+{% endif %}
+
+<div class="row g-3">
+  <!-- Appointments -->
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header-custom"><i class="fas fa-calendar text-primary"></i> Recent Appointments</div>
+      <div>
+        {% for a in appointments %}
+        <div style="padding:10px 16px;border-bottom:1px solid #f1f5f9;font-size:12.5px;">
+          <div style="display:flex;justify-content:space-between;"><span style="font-weight:600;">{{ a.date }}</span><span class="badge-status badge-{{ a.status|lower }}" style="font-size:10px;">{{ a.status }}</span></div>
+          <div style="color:#94a3b8;margin-top:2px;">{{ a.appointment_type }} · {{ a.time|default:"—" }}</div>
+        </div>
+        {% empty %}<div class="p-3 text-muted text-center" style="font-size:12px;">No appointments.</div>{% endfor %}
+      </div>
+    </div>
+  </div>
+  <!-- Prescriptions -->
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header-custom"><i class="fas fa-prescription-bottle text-success"></i> Prescriptions</div>
+      <div>
+        {% for rx in prescriptions %}
+        <div style="padding:10px 16px;border-bottom:1px solid #f1f5f9;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div><div style="font-size:12.5px;font-weight:600;">{{ rx.diagnosis|truncatechars:30|default:"Prescription #"|add:rx.id|stringformat:"s" }}</div><div style="font-size:10px;color:#94a3b8;">{{ rx.created_at|date:"d M Y" }}</div></div>
+            <a href="{% url 'prescription_detail' rx.id %}" style="font-size:11px;color:#0ea5e9;text-decoration:none;">View</a>
+          </div>
+        </div>
+        {% empty %}<div class="p-3 text-muted text-center" style="font-size:12px;">No prescriptions.</div>{% endfor %}
+      </div>
+    </div>
+  </div>
+  <!-- Lab Reports -->
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header-custom"><i class="fas fa-flask text-warning"></i> Lab Reports</div>
+      <div>
+        {% for r in lab_reports %}
+        <div style="padding:10px 16px;border-bottom:1px solid #f1f5f9;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div><div style="font-size:12.5px;font-weight:600;">{{ r.test_name }}</div><div style="font-size:10px;color:#94a3b8;">{{ r.date|date:"d M Y" }}</div></div>
+            <span class="badge-status {% if r.abnormal_flag == 'Critical' %}badge-critical{% elif r.abnormal_flag == 'Abnormal' %}badge-pending{% else %}badge-approved{% endif %}" style="font-size:10px;">{{ r.abnormal_flag }}</span>
+          </div>
+        </div>
+        {% empty %}<div class="p-3 text-muted text-center" style="font-size:12px;">No lab reports.</div>{% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+{% if vitals %}
+<script>
+const vd = {{ vitals_chart|safe }};
+new Chart(document.getElementById('vitalsChart'),{
+  type:'line',
+  data:{labels:vd.map(x=>x.date),datasets:[
+    {label:'Heart Rate',data:vd.map(x=>x.hr),borderColor:'#ef4444',backgroundColor:'transparent',tension:0.4,pointRadius:3},
+    {label:'BP Systolic',data:vd.map(x=>x.bp),borderColor:'#f97316',backgroundColor:'transparent',tension:0.4,pointRadius:3},
+    {label:'SpO2',data:vd.map(x=>x.spo2),borderColor:'#0ea5e9',backgroundColor:'transparent',tension:0.4,pointRadius:3},
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:10}}},scales:{y:{beginAtZero:false,grid:{color:'#f1f5f9'}},x:{grid:{display:false}}}}
+});
+</script>
+{% endif %}
+{% endblock %}

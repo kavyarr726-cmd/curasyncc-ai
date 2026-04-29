@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AI Disease Predictor — CuraSync AI</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+body { font-family:'Segoe UI',system-ui,sans-serif; background:#f8fafc; min-height:100vh; }
+.topbar { background:#0f172a; color:#fff; padding:14px 24px; display:flex; align-items:center; gap:14px; }
+.topbar a { color:#94a3b8; text-decoration:none; font-size:13px; }
+.topbar a:hover { color:#fff; }
+.hero-banner { background:linear-gradient(135deg,#0f172a,#1e293b); padding:40px 24px; text-align:center; }
+.hero-banner h1 { font-size:32px; font-weight:900; color:#fff; }
+.hero-banner p { color:#94a3b8; margin-top:8px; font-size:15px; }
+.container-main { max-width:900px; margin:0 auto; padding:32px 24px; }
+.card { border:1px solid #e2e8f0; border-radius:14px; background:#fff; margin-bottom:24px; }
+.card-header-custom { padding:16px 20px; border-bottom:1px solid #f1f5f9; font-weight:700; font-size:15px; display:flex; align-items:center; gap:8px; }
+.symptom-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:8px; padding:16px; }
+.symptom-chip { display:flex; align-items:center; gap:8px; padding:9px 12px; border-radius:8px; border:1px solid #e2e8f0; cursor:pointer; transition:all 0.15s; user-select:none; font-size:13px; }
+.symptom-chip:hover { border-color:#0ea5e9; background:#f0f9ff; }
+.symptom-chip input { accent-color:#0ea5e9; }
+.symptom-chip.selected { background:#f0f9ff; border-color:#0ea5e9; color:#0369a1; }
+.search-box { padding:12px 16px; border-bottom:1px solid #f1f5f9; }
+.search-box input { width:100%; padding:9px 14px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; outline:none; }
+.search-box input:focus { border-color:#0ea5e9; }
+.btn-predict { background:linear-gradient(135deg,#0ea5e9,#6366f1); color:#fff; border:none; border-radius:10px; padding:13px 32px; font-size:15px; font-weight:700; cursor:pointer; transition:all 0.2s; width:100%; margin-top:16px; }
+.btn-predict:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(14,165,233,0.4); }
+.selected-count { font-size:13px; color:#64748b; padding:8px 16px; }
+.error-box { background:#fee2e2; border-radius:10px; padding:12px 16px; margin-bottom:16px; color:#991b1b; font-size:13px; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="{% url 'home' %}">🏥 CuraSync AI</a> <span style="color:#475569;">/</span>
+  <span>AI Disease Predictor</span>
+  {% if request.user.is_authenticated %}<a href="{% url 'redirect_dashboard' %}" style="margin-left:auto;">← Dashboard</a>{% endif %}
+</div>
+<div class="hero-banner">
+  <h1>🤖 AI Disease Predictor</h1>
+  <p>Select your symptoms below — our ML model will predict the most likely diagnosis</p>
+  {% if not ml_loaded %}<div style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:8px 14px;display:inline-block;margin-top:12px;font-size:13px;color:#fbbf24;">⚠ ML model not loaded — demo mode active</div>{% endif %}
+</div>
+<div class="container-main">
+  {% if error %}<div class="error-box"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>{% endif %}
+  <form method="post">{% csrf_token %}
+    <div class="card">
+      <div class="card-header-custom"><i class="fas fa-search" style="color:#0ea5e9;"></i> Search Symptoms</div>
+      <div class="search-box"><input type="text" id="symptomSearch" placeholder="Type to search symptoms..." onkeyup="filterSymptoms(this.value)"></div>
+      <div class="selected-count">Selected: <strong id="selCount">0</strong> symptom(s)</div>
+      <div class="symptom-grid" id="symptomGrid">
+        {% for symptom in symptoms %}
+        <label class="symptom-chip" id="chip_{{ forloop.counter }}">
+          <input type="checkbox" name="symptoms" value="{{ symptom }}" onchange="updateCount()">
+          <span>{{ symptom|title|cut:"_" }}</span>
+        </label>
+        {% empty %}
+        <div class="p-4 text-muted">No symptoms loaded. Please ensure ML model is trained.</div>
+        {% endfor %}
+      </div>
+    </div>
+    <button type="submit" class="btn-predict"><i class="fas fa-brain"></i> Predict Disease</button>
+  </form>
+</div>
+<script>
+function filterSymptoms(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('.symptom-chip').forEach(chip => {
+    const text = chip.textContent.toLowerCase();
+    chip.style.display = text.includes(q) ? '' : 'none';
+  });
+}
+function updateCount() {
+  const count = document.querySelectorAll('input[name=symptoms]:checked').length;
+  document.getElementById('selCount').textContent = count;
+  document.querySelectorAll('.symptom-chip').forEach(chip => {
+    chip.classList.toggle('selected', chip.querySelector('input').checked);
+  });
+}
+</script>
+</body>
+</html>

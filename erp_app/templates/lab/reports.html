@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}All Lab Reports{% endblock %}
+{% block page_title %}All Lab Reports{% endblock %}
+{% block sidebar_links %}<div class="sidebar-section">Lab Portal</div>
+<a href="{% url 'lab_dashboard' %}" class="sidebar-link"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+<a href="{% url 'lab_reports' %}" class="sidebar-link"><i class="fas fa-flask"></i> All Reports</a>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>🧪 All Lab Reports</h1></div></div>
+<div class="card mb-3 p-3">
+  <form method="get" class="d-flex gap-2 flex-wrap align-items-end">
+    <div><label class="form-label" style="font-size:11px;">FLAG</label><select name="flag" class="form-select" style="width:130px;"><option value="">All</option><option value="Normal" {% if flag_filter == 'Normal' %}selected{% endif %}>Normal</option><option value="Abnormal" {% if flag_filter == 'Abnormal' %}selected{% endif %}>Abnormal</option><option value="Critical" {% if flag_filter == 'Critical' %}selected{% endif %}>Critical</option></select></div>
+    <div><label class="form-label" style="font-size:11px;">STATUS</label><select name="status" class="form-select" style="width:130px;"><option value="">All</option><option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option><option value="Completed" {% if status_filter == 'Completed' %}selected{% endif %}>Completed</option></select></div>
+    <div><label class="form-label" style="font-size:11px;">SEARCH</label><input name="search" class="form-control" style="width:180px;" placeholder="Patient/test name..."></div>
+    <button class="btn-primary-custom" style="height:38px;"><i class="fas fa-filter"></i> Filter</button>
+    <a href="{% url 'lab_reports' %}" class="btn-secondary-custom" style="height:38px;">Reset</a>
+  </form>
+</div>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-custom w-100">
+      <thead><tr><th>Patient</th><th>Test</th><th>Result</th><th>Flag</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for r in reports%}
+        <tr>
+          <td style="font-weight:600;">{{r.patient.name}}</td>
+          <td>{{r.test_name}}</td>
+          <td style="font-size:12px;color:#475569;">{{r.result|truncatechars:40|default:"—"}}</td>
+          <td><span class="badge-status {% if r.abnormal_flag == 'Critical' %}badge-critical{% elif r.abnormal_flag == 'Abnormal' %}badge-pending{% else %}badge-approved{% endif %}" style="font-size:10px;">{{r.abnormal_flag}}</span></td>
+          <td><span class="badge-status {% if r.status == 'Completed' %}badge-approved{% elif r.status == 'In Progress' %}badge-pending{% else %}badge-low{% endif %}" style="font-size:10px;">{{r.status}}</span></td>
+          <td style="font-size:12px;color:#94a3b8;">{{r.date|date:"d M Y"}}</td>
+          <td>{% if r.status != 'Completed'%}<a href="{% url 'upload_report' r.id %}" class="btn btn-sm btn-outline-primary" style="font-size:10px;border-radius:5px;">Upload</a>{% endif %}</td>
+        </tr>
+        {%empty%}<tr><td colspan="7" class="text-center text-muted p-4">No reports found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Billing{% endblock %}
+{% block page_title %}Billing & Invoices{% endblock %}
+{% block sidebar_links %}
+<div class="sidebar-section">Billing</div>
+<a href="{% url 'billing_list' %}" class="sidebar-link active"><i class="fas fa-file-invoice-dollar"></i> Invoices</a>
+<a href="{% url 'create_invoice' %}" class="sidebar-link"><i class="fas fa-plus-circle"></i> New Invoice</a>
+<a href="{% url 'admin_dashboard' %}" class="sidebar-link"><i class="fas fa-tachometer-alt"></i> Admin Dashboard</a>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>🧾 Billing & Invoices</h1><p>Manage all patient invoices and payments</p></div>
+  <a href="{% url 'create_invoice' %}" class="btn-primary-custom"><i class="fas fa-plus"></i> New Invoice</a>
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-md-4"><div class="stat-card green"><div class="stat-icon"><i class="fas fa-check-circle" style="color:#10b981"></i></div><div class="stat-label">Total Collected</div><div class="stat-value">₹{{ total_revenue|floatformat:0 }}</div></div></div>
+  <div class="col-md-4"><div class="stat-card red"><div class="stat-icon"><i class="fas fa-exclamation-circle" style="color:#ef4444"></i></div><div class="stat-label">Pending Dues</div><div class="stat-value">₹{{ total_pending|floatformat:0 }}</div></div></div>
+</div>
+<div class="card mb-3 p-3">
+  <form method="get" class="d-flex gap-2 flex-wrap align-items-end">
+    <div><label class="form-label" style="font-size:11px;">SEARCH</label><input name="search" class="form-control" style="width:220px;" placeholder="Patient name or Invoice #" value="{{ search }}"></div>
+    <div><label class="form-label" style="font-size:11px;">STATUS</label>
+      <select name="status" class="form-select" style="width:140px;">
+        <option value="">All</option><option value="Unpaid" {% if status_filter == 'Unpaid' %}selected{% endif %}>Unpaid</option>
+        <option value="Paid" {% if status_filter == 'Paid' %}selected{% endif %}>Paid</option>
+        <option value="Partial" {% if status_filter == 'Partial' %}selected{% endif %}>Partial</option>
+      </select></div>
+    <button class="btn-primary-custom" style="height:38px;"><i class="fas fa-search"></i> Filter</button>
+    <a href="{% url 'billing_list' %}" class="btn-secondary-custom" style="height:38px;">Reset</a>
+  </form>
+</div>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-custom w-100">
+      <thead><tr><th>Invoice #</th><th>Patient</th><th>Subtotal</th><th>Tax</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for inv in invoices %}
+        <tr>
+          <td style="font-weight:700;font-size:12px;color:#0ea5e9;">{{ inv.invoice_number }}</td>
+          <td><div style="font-weight:600;">{{ inv.patient.name }}</div><div style="font-size:11px;color:#94a3b8;">{{ inv.created_at|date:"d M Y" }}</div></td>
+          <td>₹{{ inv.subtotal }}</td>
+          <td>₹{{ inv.tax }}</td>
+          <td style="font-weight:700;">₹{{ inv.total }}</td>
+          <td style="color:#10b981;font-weight:600;">₹{{ inv.paid_amount }}</td>
+          <td style="color:{% if inv.balance > 0 %}#ef4444{% else %}#10b981{% endif %};font-weight:700;">₹{{ inv.balance|floatformat:2 }}</td>
+          <td><span class="badge-status {% if inv.status == 'Paid' %}badge-approved{% elif inv.status == 'Unpaid' %}badge-cancelled{% else %}badge-pending{% endif %}">{{ inv.status }}</span></td>
+          <td>
+            <div class="d-flex gap-1">
+              {% if inv.status != 'Paid' %}
+              <form method="post" action="{% url 'mark_paid' inv.id %}">{% csrf_token %}
+                <select name="payment_method" class="form-select form-select-sm" style="width:90px;font-size:11px;">
+                  <option>Cash</option><option>Card</option><option>UPI</option><option>Insurance</option>
+                </select>
+                <button class="btn-success-custom mt-1" style="font-size:10px;padding:4px 10px;">✓ Paid</button>
+              </form>
+              {% endif %}
+              <a href="{% url 'download_invoice' inv.id %}" class="btn btn-sm btn-outline-secondary" style="font-size:11px;border-radius:6px;align-self:flex-start;"><i class="fas fa-download"></i></a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9" class="text-center text-muted p-4">No invoices found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

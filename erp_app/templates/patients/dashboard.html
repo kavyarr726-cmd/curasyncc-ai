@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Patient Dashboard{% endblock %}
+{% block page_title %}My Health Dashboard{% endblock %}
+{% block sidebar_links %}<div class="sidebar-section">Patient Portal</div>
+<a href="{% url 'patient_dashboard' %}" class="sidebar-link"><i class="fas fa-home"></i> Dashboard</a>
+<a href="{% url 'patient_book_appointment' %}" class="sidebar-link"><i class="fas fa-calendar-plus"></i> Book Appointment</a>
+<a href="{% url 'patient_appointments' %}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> My Appointments</a>
+<a href="{% url 'patient_prescriptions' %}" class="sidebar-link"><i class="fas fa-prescription-bottle-alt"></i> Prescriptions</a>
+<a href="{% url 'patient_reports' %}" class="sidebar-link"><i class="fas fa-flask"></i> Lab Reports</a>
+<a href="{% url 'patient_billing' %}" class="sidebar-link"><i class="fas fa-file-invoice-dollar"></i> Billing</a>
+<a href="{% url 'ai_prediction' %}" class="sidebar-link"><i class="fas fa-brain"></i> AI Check-up</a>
+<a href="{% url 'patient_notifications' %}" class="sidebar-link"><i class="fas fa-bell"></i> Notifications</a>{% endblock %}
+{% block content %}
+{% if upcoming_appointment %}
+<div style="background:linear-gradient(135deg,#0ea5e9,#6366f1);border-radius:12px;padding:16px 20px;margin-bottom:20px;color:#fff;display:flex;align-items:center;gap:14px;">
+  <span style="font-size:28px;">📅</span>
+  <div><div style="font-weight:700;">Upcoming Appointment</div><div style="font-size:13px;opacity:0.85;margin-top:2px;">With {{ upcoming_appointment.doctor }} on {{ upcoming_appointment.date }} at {{ upcoming_appointment.time|default:"TBD" }}</div></div>
+  <a href="{% url 'patient_appointments' %}" style="margin-left:auto;background:rgba(255,255,255,0.2);color:#fff;padding:6px 14px;border-radius:8px;text-decoration:none;font-size:12px;font-weight:600;">View →</a>
+</div>
+{% endif %}
+
+{% if unread_notifs %}
+<div style="background:#fef3c7;border-left:4px solid #f59e0b;border-radius:8px;padding:12px 16px;margin-bottom:20px;">
+  <strong style="color:#92400e;">🔔 {{ unread_notifs|length }} unread notification(s):</strong>
+  {% for n in unread_notifs%}<div style="font-size:13px;color:#78350f;margin-top:4px;">{{ n.title }}</div>{% endfor %}
+  <a href="{% url 'patient_notifications' %}" style="font-size:12px;color:#d97706;font-weight:600;text-decoration:none;margin-top:6px;display:inline-block;">View all →</a>
+</div>
+{% endif %}
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-6"><div class="stat-card blue"><div class="stat-icon"><i class="fas fa-calendar-alt" style="color:#0ea5e9"></i></div><div class="stat-label">Appointments</div><div class="stat-value">{{ appointments_count }}</div></div></div>
+  <div class="col-md-3 col-6"><div class="stat-card green"><div class="stat-icon"><i class="fas fa-prescription-bottle" style="color:#10b981"></i></div><div class="stat-label">Prescriptions</div><div class="stat-value">{{ prescriptions_count }}</div></div></div>
+  <div class="col-md-3 col-6"><div class="stat-card purple"><div class="stat-icon"><i class="fas fa-flask" style="color:#6366f1"></i></div><div class="stat-label">Lab Reports</div><div class="stat-value">{{ lab_reports_count }}</div></div></div>
+  <div class="col-md-3 col-6"><div class="stat-card red"><div class="stat-icon"><i class="fas fa-file-invoice-dollar" style="color:#ef4444"></i></div><div class="stat-label">Pending Bills</div><div class="stat-value">{{ pending_invoices }}</div></div></div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card p-4 text-center">
+      <div style="font-size:13px;color:#94a3b8;margin-bottom:8px;">AI Health Risk Score</div>
+      <div style="font-size:52px;font-weight:900;color:{% if risk_label == 'Critical' %}#ef4444{% elif risk_label == 'High' %}#f97316{% elif risk_label == 'Medium' %}#f59e0b{% else %}#10b981{% endif %};">{{ risk_score|floatformat:0 }}</div>
+      <div class="mt-2"><span class="badge-status {% if risk_label == 'Critical' %}badge-critical{% elif risk_label == 'High' %}badge-high{% elif risk_label == 'Medium' %}badge-pending{% else %}badge-approved{% endif %}">{{ risk_label }} Risk</span></div>
+      {% if latest_vitals %}<div style="margin-top:12px;font-size:12px;color:#94a3b8;text-align:left;">
+        <div>❤️ HR: {{ latest_vitals.heart_rate|default:"—" }} bpm</div>
+        <div>🩺 BP: {{ latest_vitals.blood_pressure_systolic|default:"—" }}/{{ latest_vitals.blood_pressure_diastolic|default:"—" }} mmHg</div>
+        <div>🌡️ Temp: {{ latest_vitals.temperature|default:"—" }}°C</div>
+        <div>💉 SpO2: {{ latest_vitals.oxygen_saturation|default:"—" }}%</div>
+      </div>{% endif %}
+      <a href="{% url 'ai_prediction' %}" class="btn-primary-custom mt-3 w-100 justify-content-center"><i class="fas fa-brain"></i> AI Check-up</a>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-header-custom"><i class="fas fa-calendar-alt text-primary"></i> Recent Appointments</div>
+      {% for a in recent_appointments%}
+      <div style="padding:10px 16px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+        <div><div style="font-size:13px;font-weight:600;">{{ a.doctor }}</div><div style="font-size:11px;color:#94a3b8;">{{ a.date }} · {{ a.appointment_type }}</div></div>
+        <span class="badge-status badge-{{ a.status|lower }}" style="font-size:10px;">{{ a.status }}</span>
+      </div>
+      {%empty%}<div class="p-4 text-center text-muted" style="font-size:13px;">No appointments yet.</div>{% endfor %}
+      <div style="padding:10px 16px;"><a href="{% url 'patient_book_appointment' %}" class="btn-primary-custom w-100 justify-content-center" style="font-size:12px;"><i class="fas fa-plus"></i> Book New</a></div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-header-custom"><i class="fas fa-prescription-bottle text-success"></i> Recent Prescriptions</div>
+      {% for rx in recent_prescriptions%}
+      <div style="padding:10px 16px;border-bottom:1px solid #f1f5f9;">
+        <div style="font-size:12.5px;font-weight:600;">{{ rx.diagnosis|truncatechars:35|default:"Prescription #"|add:rx.id|stringformat:"s" }}</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px;">{{ rx.doctor }} · {{ rx.created_at|date:"d M Y" }}</div>
+        <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">{% for item in rx.items.all|slice:":2"%}<span style="background:#f0fdf4;color:#166534;padding:2px 8px;border-radius:10px;font-size:10px;">{{item.medicine}}</span>{% endfor %}</div>
+      </div>
+      {%empty%}<div class="p-4 text-center text-muted" style="font-size:13px;">No prescriptions yet.</div>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

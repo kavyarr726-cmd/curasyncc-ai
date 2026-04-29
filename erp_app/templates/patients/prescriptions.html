@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}My Prescriptions{% endblock %}
+{% block page_title %}My Prescriptions{% endblock %}
+{% block sidebar_links %}<div class="sidebar-section">Patient Portal</div>
+<a href="{% url 'patient_dashboard' %}" class="sidebar-link"><i class="fas fa-home"></i> Dashboard</a>
+<a href="{% url 'patient_book_appointment' %}" class="sidebar-link"><i class="fas fa-calendar-plus"></i> Book Appointment</a>
+<a href="{% url 'patient_appointments' %}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> My Appointments</a>
+<a href="{% url 'patient_prescriptions' %}" class="sidebar-link"><i class="fas fa-prescription-bottle-alt"></i> Prescriptions</a>
+<a href="{% url 'patient_reports' %}" class="sidebar-link"><i class="fas fa-flask"></i> Lab Reports</a>
+<a href="{% url 'patient_billing' %}" class="sidebar-link"><i class="fas fa-file-invoice-dollar"></i> Billing</a>
+<a href="{% url 'ai_prediction' %}" class="sidebar-link"><i class="fas fa-brain"></i> AI Check-up</a>
+<a href="{% url 'patient_notifications' %}" class="sidebar-link"><i class="fas fa-bell"></i> Notifications</a>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>💊 My Prescriptions</h1></div></div>
+{% for rx in prescriptions%}
+<div class="card mb-3 p-4">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-weight:700;font-size:15px;">{{ rx.diagnosis|truncatechars:60|default:"Prescription" }}</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:3px;">By {{ rx.doctor }} · {{ rx.created_at|date:"d M Y" }}{% if rx.follow_up_date%} · Follow-up: {{rx.follow_up_date}}{% endif %}</div>
+    </div>
+    <a href="{% url 'download_prescription' rx.id %}" class="btn-primary-custom" style="font-size:12px;padding:6px 14px;"><i class="fas fa-download"></i> Download</a>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;">
+    {% for item in rx.items.all%}
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 14px;font-size:12.5px;">
+      <div style="font-weight:700;">{{item.medicine}}</div>
+      <div style="color:#64748b;font-size:11px;">{{item.dosage}} · {{item.frequency}}{% if item.days%} · {{item.days}} days{% endif %}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{%empty%}<div class="card p-5 text-center text-muted">No prescriptions issued yet.</div>
+{% endfor %}
+{% endblock %}
