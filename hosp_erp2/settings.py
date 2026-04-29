@@ -7,7 +7,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ── Security ──
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-curasyncai-erp-v2-local-dev-key-change-in-prod')
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+ALLOWED_HOSTS = os.environ.get(
+    "ALLOWED_HOSTS",
+    "curasync-ai-mh2k.onrender.com"
+).split(",")
 
 INSTALLED_APPS = [
     'django.contrib.admin',
